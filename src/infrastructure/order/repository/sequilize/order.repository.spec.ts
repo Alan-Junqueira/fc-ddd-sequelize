@@ -81,4 +81,90 @@ describe("Order repository test", () => {
       ],
     });
   });
+
+  it("Should find created order data by order id.", async () => {
+    const customerRepository = new CustomerRepository();
+    const customer = new Customer("123", "Customer 1");
+    const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
+    customer.changeAddress(address);
+    await customerRepository.create(customer);
+
+    const productRepository = new ProductRepository();
+    const product = new Product("123", "Product 1", 10);
+    await productRepository.create(product);
+
+    const orderItem = new OrderItem(
+      "1",
+      product.name,
+      product.price,
+      product.id,
+      2
+    );
+
+    const product2 = new Product("1234", "Product 2", 25);
+    await productRepository.create(product2);
+    const orderItem2 = new OrderItem(
+      "2",
+      product2.name,
+      product2.price,
+      product2.id,
+      5
+    );
+
+    const order = new Order("123", "123", [orderItem, orderItem2]);
+
+    const orderRepository = new OrderRepository();
+    await orderRepository.create(order);
+
+    const foundedOrder = await orderRepository.find(order.id);
+
+    expect(foundedOrder).toEqual(order);
+  });
+
+  it("Should list all created orders.", async () => {
+    const customerRepository = new CustomerRepository();
+    const customer = new Customer("123", "Customer 1");
+    const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
+    customer.changeAddress(address);
+    await customerRepository.create(customer);
+
+    const productRepository = new ProductRepository();
+    const product = new Product("111", "Product 1", 10);
+    await productRepository.create(product);
+
+    const promises = Array.from({ length: 6 }).map(async (_, i) => {
+      const product = new Product(`${i + 1}`, `Product ${i + 1}`, 10 * (i + 1));
+      await productRepository.create(product);
+      return new OrderItem(
+        `${i + 1}`,
+        product.name,
+        product.price,
+        product.id,
+        i + 1
+      );
+    });
+
+    const [
+      orderItem1,
+      orderItem2,
+      orderItem3,
+      orderItem4,
+      orderItem5,
+      orderItem6,
+    ] = await Promise.all(promises);
+
+    const order = new Order("111", "123", [orderItem1, orderItem2]);
+    const order2 = new Order("222", "123", [orderItem3, orderItem4]);
+    const order3 = new Order("333", "123", [orderItem5, orderItem6]);
+
+    const orderRepository = new OrderRepository();
+    await orderRepository.create(order);
+    await orderRepository.create(order2);
+    await orderRepository.create(order3);
+
+    const orderList = await orderRepository.findAll();
+
+    expect(orderList).toHaveLength(3);
+    expect(orderList).toEqual([order, order2, order3]);
+  });
 });
