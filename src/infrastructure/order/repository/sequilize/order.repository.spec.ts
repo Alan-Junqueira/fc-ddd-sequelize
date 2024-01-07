@@ -167,4 +167,50 @@ describe("Order repository test", () => {
     expect(orderList).toHaveLength(3);
     expect(orderList).toEqual([order, order2, order3]);
   });
+
+  it("Should update created order.", async () => {
+    const customerRepository = new CustomerRepository();
+    const customer = new Customer("123", "Customer 1");
+    const address = new Address("Street 1", 1, "Zipcode 1", "City 1");
+    customer.changeAddress(address);
+    await customerRepository.create(customer);
+
+    const productRepository = new ProductRepository();
+    const product = new Product("111", "Product 1", 10);
+    await productRepository.create(product);
+
+    const promises = Array.from({ length: 6 }).map(async (_, i) => {
+      const product = new Product(`${i + 1}`, `Product ${i + 1}`, 10 * (i + 1));
+      await productRepository.create(product);
+      return new OrderItem(
+        `${i + 1}`,
+        product.name,
+        product.price,
+        product.id,
+        i + 1
+      );
+    });
+
+    const [
+      orderItem1,
+      orderItem2,
+      orderItem3,
+      orderItem4,
+      orderItem5,
+      orderItem6,
+    ] = await Promise.all(promises);
+
+    const order = new Order("111", "123", [orderItem1, orderItem2, orderItem3]);
+
+    const orderRepository = new OrderRepository();
+    await orderRepository.create(order);
+
+    const updatedOrder = new Order("111", "123", [orderItem4, orderItem5, orderItem6]);
+
+    await orderRepository.update(updatedOrder)
+
+    const foundedUpdatedOrder = await orderRepository.find(order.id);
+
+    expect(foundedUpdatedOrder).toEqual(updatedOrder);
+  });
 });
