@@ -128,9 +128,9 @@ describe("Domain events tests", () => {
 
     customer.changeAddress(address)
 
-    const customerCreatedEvent = new CustomerAddressChangedEvent(customer);
+    const customerAddressChangedEvent = new CustomerAddressChangedEvent(customer);
 
-    eventDispatcher.notify(customerCreatedEvent)
+    eventDispatcher.notify(customerAddressChangedEvent)
 
     expect(spyEventHandler).toHaveBeenCalled();
   })
